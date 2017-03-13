@@ -28,9 +28,8 @@ class Interpreter(boot.Interpreter):
         elif name in ["lookahead"]:
             calls.append(root[0])
         elif name == "exactly":
-            for char in root[0]:
-                if pop(self.input) != char:
-                    return MatchError("Not exactly %s" % root[0])
+            if pop(self.input) != root[0]:
+                return MatchError("Not exactly %s" % root[0])
             return root[0]
         elif name == "token":
             while pop(self.input) in ['\t', ' ', '\\']:
