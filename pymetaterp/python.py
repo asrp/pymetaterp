@@ -27,18 +27,22 @@ class Interpreter(boot.Interpreter):
             calls.extend(root)
         elif name in ["lookahead"]:
             calls.append(root[0])
-        elif name in ["exactly", "token"]:
-            if name == "token":
-                while pop(self.input) in ['\t', ' ', '\\']:
-                    if self.input[0][self.input[1]] == '\\':
-                        pop(self.input)
-                if self.input[1] == len(self.input[0]):
-                    return MatchError("EOF")
-                self.input[1] -= 1
+        elif name == "exactly":
             for char in root[0]:
                 if pop(self.input) != char:
                     return MatchError("Not exactly %s" % root[0])
-            if name == "token" and root[0].isalpha():
+            return root[0]
+        elif name == "token":
+            while pop(self.input) in ['\t', ' ', '\\']:
+                if self.input[0][self.input[1]] == '\\':
+                    pop(self.input)
+            if self.input[1] == len(self.input[0]):
+                return MatchError("EOF")
+            self.input[1] -= 1
+            for char in root[0]:
+                if pop(self.input) != char:
+                    return MatchError("Not exactly %s" % root[0])
+            if root[0].isalpha():
                 top = pop(self.input)
                 if top.isalnum() or top == '_':
                     return MatchError("Prefix matched but didn't end.")
