@@ -44,6 +44,8 @@ class Interpreter:
                 except MatchError:
                     self.input = last_input[:]
                     break
+                if last_input == self.input:
+                    break
             if lower > len(outputs):
                 raise MatchError("Matched %s < %s times" % (len(outputs), lower))
         elif name == "or":

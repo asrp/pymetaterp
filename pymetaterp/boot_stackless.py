@@ -129,7 +129,7 @@ class Interpreter:
                 self.input = frame.input[:]
                 outputs.pop()
             #print("output len", len(outputs))
-            if is_error or len(outputs) == upper:
+            if is_error or len(outputs) == upper or frame.input == self.input:
                 if lower > len(outputs):
                     return MatchError("Matched %s < %s times" % (len(outputs), lower))
                 else:
