@@ -64,6 +64,8 @@ class Interpreter:
                 self.stack.append(Frame(root, self.input))
                 output = self.new_step()
             else:
+                if type(output) == Node:
+                    output.pos = (self.stack[-1].input[1]+1, self.input[1]+1)
                 self.stack.pop()
                 if not self.stack:
                     return output
