@@ -67,10 +67,10 @@ class Interpreter:
             if root[NAME] == "anything":
                 return pop(self.input)
             outputs = self.match(self.rules[root[NAME]][BODY])
-            if root[NAME] == "escaped_char" and not is_error:
+            if root[NAME] == "escaped_char":
                 chars = dict(["''", '""', "t\t", "n\n", "r\r",
                               "b\b", "f\f", "\\\\"])
-                return chars[output]
+                return chars[outputs]
             and_node = getattr(outputs, "name", None) == "And"
             make_node = "!" in self.rules[root[NAME]][FLAGS] or\
                         (and_node and len(outputs) > 1)
