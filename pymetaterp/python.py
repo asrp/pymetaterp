@@ -124,14 +124,17 @@ class Interpreter(boot.Interpreter):
 def reformat_atom(atom, trailers):
     output = atom
     for trailer in to_list(trailers):
+        pos = (output.pos[0], trailer.pos[1])
         if trailer.name == "arglist":
             output = Node("__call__", [output, trailer])
         elif trailer.name == "NAME":
             output = Node("__getattr__", [output, Node("NAME", trailer)])
+            output[1].pos = trailer.pos
         elif trailer.name == "subscriptlist":
             output = Node("__getitem__", [output] + trailer)
         else:
             raise Exception("Unknown trailer %s" % trailer.name)
+        output.pos = pos
     return output
 
 binary_ops = ((">=", "<=", "<>", "<", ">", "==", "!=",
@@ -154,7 +157,9 @@ def reformat_binary(start, oper_and_atoms):
             while index < len(tokens) and\
                   priority[tokens[index][0][0]] > priority[op]:
                 rhs, index = parse(rhs, tokens, index)
+            pos = (lhs.pos[0], rhs.pos[1])
             lhs = Node("__binary__", [op, lhs, rhs])
+            lhs.pos = pos
         return (lhs, index)
     if not oper_and_atoms:
         return start
