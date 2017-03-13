@@ -8,6 +8,7 @@ class Interpreter(boot.Interpreter):
         self.indentation = [0]
         self.locals = {}
         self.debug = debug
+        self.memoizer = {}
         return boot.Interpreter.match(self, root, input, pos)
 
     def eval(self, root):
@@ -51,6 +52,12 @@ class Interpreter(boot.Interpreter):
             elif root[NAME] == "void":
                 return
             else:
+                key = (root[NAME], id(self.input[0]), self.input[1],
+                       tuple(self.indentation))
+                if key in self.memoizer:
+                    self.input = self.memoizer[key][1][:]
+                    return self.memoizer[key][0]
+                self.stack[-1].key = key
                 calls.append(self.rules[root[NAME]][BODY])
             self.stack[-1].locals = self.locals
             self.locals = {}
@@ -104,7 +111,9 @@ class Interpreter(boot.Interpreter):
         elif name == "apply":
             # Need to run this line even on error
             self.locals = frame.locals
-            return boot.Interpreter.next_step(self)
+            output = boot.Interpreter.next_step(self)
+            self.memoizer[frame.key] = (output, self.input[:])
+            return output
         elif name == "lookahead":
             self.input = frame.input[:]
             return output
