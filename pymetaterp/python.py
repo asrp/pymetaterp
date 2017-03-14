@@ -49,7 +49,7 @@ class Interpreter(boot.Interpreter):
             return root[0]
         elif name == "apply":
             if self.debug:
-                print " "*len(self.stack), "matching", name, root[NAME], self.input[1], self.input[0][self.input[1]+1:self.input[1]+11]
+                print " "*len(self.stack), "applying", root[NAME], self.input[1], str(self.input[0][self.input[1]+1:self.input[1]+11])[:20]
             if root[NAME] == "anything":
                 return pop(self.input)
             elif root[NAME] == "void":
@@ -91,6 +91,8 @@ class Interpreter(boot.Interpreter):
         output = outputs[-1] if outputs else None
         is_error = type(output) == MatchError
         finished = len(outputs) == len(frame.calls)
+        if self.debug and name in ["apply"]:
+            print " "*len(self.stack), "->", name, output
         if is_error and name not in ["quantified", "or", "negation", "apply"]:
             return output
         elif not (finished or name in ["or", "quantified"]):
