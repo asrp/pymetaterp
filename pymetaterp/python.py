@@ -1,7 +1,7 @@
 import boot_stackless as boot
 reload(boot)
 from boot_stackless import *
-import pdb
+from pdb import set_trace as bp
 
 class Interpreter(boot.Interpreter):
     def match(self, root, input=None, pos=-1, debug=False):
