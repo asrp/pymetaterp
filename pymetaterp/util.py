@@ -7,9 +7,12 @@ class MatchError(Exception):
     pass
 
 class Node(list):
-    def __init__(self, name=None, value=None):
+    def __init__(self, name=None, value=None, params=None, **kw):
         list.__init__(self, value if value is not None else [])
         self.name = name
+        self.params = params if params is not None else {}
+        for key, value in kw.items():
+            setattr(self, key, value)
 
     def __repr__(self):
         return "%s%s" % (self.name, list.__repr__(self))
