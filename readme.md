@@ -144,9 +144,18 @@ Features/bloat from a longer version of this program not (yet?) moved over:
 - Function arguments (its in the grammar but not the interpreter)
 - Nested list inputs (its also in the grammar but not the interpreter)
 - name, args, flags, body as parameters instead of positional children
-- Memoization
-- Matched input start and end positions
+- ~~Memoization~~
+- ~~Matched input start and end positions~~
 - Exact python expression matching for predicate, action and rule value. `balanced` is used as a simpler heuristic for now.
+
+## Removing features
+
+To get a smaller file with just the basics.
+
+    patch -R pymetaterp/python.py < patches/python_pos.patch
+    patch -R pymetaterp/python.py < patches/python_memoizer.patch
+    patch -R pymetaterp/boot_stackless.py < patches/boot_pos.patch
+    patch -R pymetaterp/boot_stackless.py < patches/boot_memoizer.patch
 
 ## Readings
 
