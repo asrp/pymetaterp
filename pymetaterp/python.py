@@ -165,8 +165,11 @@ def reformat_binary(start, oper_and_atoms):
         return (lhs, index)
     if not oper_and_atoms:
         return start
-    oper_and_atoms = zip(oper_and_atoms[::2], oper_and_atoms[1::2])
-    return parse(start, oper_and_atoms)[0]
+    tokens = zip(oper_and_atoms[::2], oper_and_atoms[1::2])
+    lhs, index = start, 0
+    while index < len(tokens):
+        lhs, index = parse(lhs, tokens, index)
+    return lhs
 
 def any_token(input, binary=True):
     ops = binary_ops if binary else expr_ops
