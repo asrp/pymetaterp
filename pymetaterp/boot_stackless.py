@@ -52,6 +52,12 @@ class Interpreter:
             return
         print self.input[0][self.input[1]: self.input[1] + 200]
 
+    def parse(self, rule_name, input):
+        output = self.match(self.rules[rule_name][-1], input)
+        if type(output) == MatchError or len(self.input[0]) == self.input[1] + 1:
+            return output
+        return MatchError("Not all input read")
+
     def match(self, root, input=None, pos=-1):
         """ >>> g.match(g.rules['grammar'][-1], "x='y'") """
         self.input = [input, pos]
