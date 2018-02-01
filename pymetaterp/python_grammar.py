@@ -1,7 +1,3 @@
-# To update in interpreter:
-# - dictmaker now takes 'pair's instead of 'And'
-# - 'except_clause' renamed to 'exception' and the 'And' containing it is now an 'except_clause'
-
 full_definition = r"""
 comment = ('#' {(~'\n' {anything})*})=comment
 hspaces = (' ' | '\t' | escaped_linebreak)*
@@ -44,11 +40,12 @@ continue_stmt! = "continue" {}
 return_stmt! = "return" {testlist?}
 yield_stmt = yield_expr
 raise_stmt! = "raise" {(test ("," test ("," test))?)?}
-import_stmt = import_name | import_from
+import_stmt = simport_stmt | import_name | import_from
+simport_stmt! = "simport" {NAME}
 import_name = "import" {import_names}
 import_names! = dotted_as_name ("," {dotted_as_name})*
 import_from! = "from" {"."* dotted_name | "."+}
-               "import" {"*" | "(" {import_as_names} ")" | import_as_names}
+               "import" {"*"=import_all | "(" {import_as_names} ")" | import_as_names}
 import_as_name = NAME ("as" {NAME})?
 dotted_as_name = dotted_name ("as" {NAME})?
 import_as_names! = {import_as_name ("," {import_as_name})*} ","?
@@ -60,22 +57,23 @@ assert_stmt! = "assert" {test ("," test)?}
 compound_stmt = if_stmt | while_true_stmt=while_true | while_stmt
               | simple_for_stmt | for_stmt | try_stmt | with_stmt
               | funcdef | classdef | decorated
-if_stmt = ("if" {test} ":" {suite})=single_if 
-          (("elif" {test} ":" {suite})=single_if)*
-          (("else" ":" {void=gen_true suite})=single_if)?
+if_stmt = ("if" {test} ":" {suite})=single_if
+          ((SAME_INDENT "elif" {test} ":" {suite})=single_if)*
+          ((SAME_INDENT "else" ":" {void=gen_true suite})=single_if)?
 while_true_stmt = "while_true" ":" {suite}
-while_stmt = "while" {test} ":" {suite ("else" ":" {suite})?}
-for_stmt = "for" {exprlist} "in" {testlist} ":" {suite} {{"else"} ":" {suite=elseblock}}?
+while_stmt = "while" {test} ":" {suite (SAME_INDENT "else" ":" {suite})?}
+for_stmt = "for" {exprlist} "in" {testlist} ":" {suite} {(SAME_INDENT "else" ":" {suite})?}
 simple_for_stmt = "simple_for" {exprlist} "in" {testlist} ":" {suite}
 try_stmt! = "try" ":" {suite}
-            {(({exception} ":" {suite})=except_clause)+=except_clauses
-             ("else" ":" suite)?
-             ("finally" ":" suite)?
-             | "finally" ":" suite}
+            {((SAME_INDENT {exception} ":" {suite})=except_clause)+=except_clauses
+             (SAME_INDENT  "else" ":" suite)?
+             (SAME_INDENT "finally" ":" suite)?
+             | SAME_INDENT "finally" ":" suite}
 with_stmt = "with" with_item ("," with_item)* ":" suite
 with_item = test ("as" expr)?
 # NB compile.c makes sure that the default except clause is last
 exception! = "except" {(test (("as" | ",") {test})?)?}
+# Should "give back" the consumed empty lines at the end!
 suite = NEWLINE INDENT {(SAME_INDENT stmt | EMPTY_LINE)+} DEDENT
       | simple_stmt
 
@@ -111,10 +109,10 @@ testlist_comp = test list_for list_iter*
 tuple! = ({test} comma)+ test?
 lambdef! = "lambda" {parameters? | void=parameters} ":" {test}
 trailer = "(" spaces {arglist} spaces ")"
-        | "[" spaces {subscriptlist} spaces "]"
+        | "[" spaces {subscriptlist=subscriptlist} spaces "]"
         | "." {NAME}
-subscriptlist! = subscript=subscript ("," subscript=subscript)* ","?
-subscript = "..." | ({test?=start} ":" {test?=stop} {step?})=slice | test
+subscriptlist! = subscript ("," {subscript})* ","?
+subscript! = "..."=ellipsis | ({test?=start} ":" {test?=stop} {step?})=slice | test
 exprlist = {expr ("," {expr})*} ","?
 step! = ":" {test?}
 dictmaker! = ({test} ":" {test} {list_for} {list_iter*})=dictcomp
@@ -146,17 +144,20 @@ testlist1 = test ("," test)*
 NUMBER! = hspaces digit+:s -> int("".join(n[0] for n in s))
 # Probably need to check that the result isn't a reserved word.
 NAME! = hspaces {((letter | '_') (letter | digit | '_')*)}
-STRINGS = STRING (spaces {STRING})*
+STRINGS = {STRING | RAW_STRING=STRING} (spaces {STRING | RAW_STRING=STRING})*
 STRING! = hspaces stype? '"' '"' '"' {(escaped_char | ~('"' '"' '"') {anything})*} '"' '"' '"'
        | hspaces stype? '\'' {(escaped_char | ~'\'' anything)*} '\''
        | hspaces stype? '"' {(escaped_char | ~'"' anything)*} '"'
-stype! = 'r'|'b'
+RAW_STRING = hspaces 'r' '"' '"' '"' {(~('"' '"' '"') {anything})*} '"' '"' '"'
+           | hspaces 'r' '\'' {(~'\'' anything)*} '\''
+           | hspaces 'r' '"' {(~'"' anything)*} '"'
+stype! = 'b'
 escaped_char! = '\\' {'n'|'r'|'t'|'b'|'f'|'"'|'\''|'\\'}
 EMPTY_LINE = (hspaces comment? ('\n' | '\r'))=EMPTY_LINE
 NEWLINE = hspaces (comment hspaces)? ('\n' | '\r')
-SAME_INDENT = hspaces:s ?(self.indentation[-1] == (len(s) if s else 0))
+SAME_INDENT = hspaces:s ?(self.indentation[-1] == (len(s) if s != None else 0))
 ENDMARKER = ~anything
-INDENT = ~~hspaces:s !(self.indentation.append(len(s) if s else 0))
+INDENT = ~~hspaces:s !(self.indentation.append(len(s) if s != None else 0))
 DEDENT = !(self.indentation.pop())
 
 grammar = file_input
