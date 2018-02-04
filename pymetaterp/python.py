@@ -2,6 +2,7 @@ import boot_stackless as boot
 reload(boot)
 from boot_stackless import *
 from pdb import set_trace as bp
+from bisect import bisect_left as bisect
 
 class Interpreter(boot.Interpreter):
     def match(self, root, input=None, pos=-1, debug=False):
@@ -125,6 +126,24 @@ class Interpreter(boot.Interpreter):
         else:
             return boot.Interpreter.next_step(self)
         return Eval
+
+    def st(self):
+        source = self.source
+        stack = self.stack
+        filename = getattr(self, "filename", "<grammar>")
+        source_lines = [line+"\n" for line in source.split("\n")]
+        line_len = [len(l) for l in source_lines]
+        source_line_num = [sum(line_len[:i+1]) for i in xrange(len(line_len))]
+        func_name = "None"
+        for i, frame in enumerate(stack):
+            line_num = [bisect(source_line_num, p) for p in frame.root.pos]
+            rel_pos = [p - (source_line_num[line_num[0]-1] if line_num[0] else 0)
+                       for p in frame.root.pos]
+            lines = "".join(source_lines[line_num[0]: line_num[1]+1])
+            print str(i).ljust(2) + " In file " + '\033[92m' + filename + '\033[0m' + " line " + str(line_num[0]) + " function " + '\033[92m' + str(func_name) + " (" + frame.root.name + ")" + '\033[0m'
+            print lines[:rel_pos[0]] + '\033[91m' + lines[rel_pos[0]: rel_pos[1]] + '\033[0m' + lines[rel_pos[1]:-1]
+            if frame.root.name == "apply":
+                func_name = frame.root[0]
 
 def reformat_atom(atom, trailers):
     output = atom
