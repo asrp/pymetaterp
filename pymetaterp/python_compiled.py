@@ -88,7 +88,7 @@ def apply_(name):
         g.input.source, g.input.position = g.memoizer[key][1][:]
         return g.memoizer[key][0]
     saved_locals = g.locals
-    g.locals = {}
+    g.locals = g.default_locals
     # func, flagged
     g.nest += 1
     saved = g.input.position
@@ -164,12 +164,12 @@ def any_token(input, binary=True):
             g.input.position = old_input
     return False
 
-def match(tree, inp, debug=False):
+def match(tree, inp, debug=False, locals=None):
     g.rules = {'anything': (rule_anything, ''), 'letter': (rule_letter, ''),
                'digit': (rule_digit, ''), 'void': (rule_void, ''),}
     g.indentation = [0]
     g.memoizer = {}
-    g.locals = {}
+    g.locals = g.default_locals = {} if locals is None else dict(locals)
     g.nest = 0
     g.debug = debug
     exec to_python(tree)
