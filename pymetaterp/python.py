@@ -5,9 +5,9 @@ from pdb import set_trace as bp
 from bisect import bisect_left as bisect
 
 class Interpreter(boot.Interpreter):
-    def match(self, root, input=None, pos=-1, debug=False):
+    def match(self, root, input=None, pos=-1, locals=None, debug=False):
         self.indentation = [0]
-        self.locals = {}
+        self.default_locals = self.locals = {} if locals is None else dict(locals)
         self.debug = debug
         self.memoizer = {}
         return boot.Interpreter.match(self, root, input, pos)
@@ -64,7 +64,7 @@ class Interpreter(boot.Interpreter):
                 self.stack[-1].key = key
                 calls.append(self.rules[root[NAME]][BODY])
             self.stack[-1].locals = self.locals
-            self.locals = {}
+            self.locals = dict(self.default_locals)
         elif name == "rule_value":
             return self.eval(root[0])
         elif name == "predicate":
@@ -93,7 +93,7 @@ class Interpreter(boot.Interpreter):
         is_error = type(output) == MatchError
         finished = len(outputs) == len(frame.calls)
         if self.debug and name in ["apply"]:
-            print " "*len(self.stack), "->", name, output
+            print " "*len(self.stack), name, "->", output
         if is_error and name not in ["quantified", "or", "negation", "apply"]:
             return output
         elif not (finished or name in ["or", "quantified"]):

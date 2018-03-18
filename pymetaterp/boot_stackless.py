@@ -52,8 +52,8 @@ class Interpreter:
             return
         print self.input[0][self.input[1]: self.input[1] + 200]
 
-    def parse(self, rule_name, input):
-        output = self.match(self.rules[rule_name][-1], input)
+    def parse(self, rule_name, input, **kwargs):
+        output = self.match(self.rules[rule_name][-1], input, **kwargs)
         if type(output) == MatchError or len(self.input[0]) == self.input[1] + 1:
             return output
         return MatchError("Not all input read")
