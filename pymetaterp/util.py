@@ -48,6 +48,14 @@ class Node(list):
                                   repr(elem).replace("'", '"') if elem != '"' else '"\\""'
                                   for elem in self])
 
+    @property
+    def descendants(self):
+        for child in self:
+            if type(child) == Node:
+                for gc in child.descendants:
+                    yield gc
+            yield child
+
 def compare_trees(t1, t2, indices):
     for ind in indices:
         t1 = t1[ind]
